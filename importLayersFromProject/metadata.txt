@@ -1,0 +1,28 @@
+# This file contains metadata for your plugin. Beginning
+# with version 1.8 this is the preferred way to supply information about a
+# plugin. The current method of embedding metadata in __init__.py will
+# be supported until version 2.0
+
+# This file should be included when you package your plugin.
+
+[general]
+name=ImportLayersFromProject
+qgisMinimumVersion=2.0
+description=Allows to copy layers from other projects. Similar to embbed layers and group core feature, but allowing modification, disconnected from source project.
+version=0.5
+changelog=
+  0.5 ported to Qgis 2.0 API by Regis Haubourg
+  0.4 last 1.x version by 'barry dot rowlingson at gmail.com'
+tags=import layers,project
+
+homepage=http://hub.qgis.org/projects/ImportLayersFromProject
+tracker=http://hub.qgis.org/projects/ImportLayersFromProject
+repository=http://plugins.qgis.org/plugins/
+icon=icon.svg
+experimental=False
+
+deprecated=False
+
+author=barry rowlingson
+email=regis.haubourg@eau-adour-garonne.fr
+

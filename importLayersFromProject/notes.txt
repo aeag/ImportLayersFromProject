@@ -1,0 +1,14 @@
+xml = file("project.qgs").read()
+
+d = PyQt4.QtXml.QDomDocument()
+d.setContent(xml)
+
+maps = d.elementsByTagName("maplayer")
+
+for map in maps: # -ish
+ map.namedItem("layername").firstChild().toText().data()
+ map.namedItem("datasource").firstChild().toText().data()
+ etc
+
+# then to read in:
+# QgsProject.instance().read(maps.item(3))
