@@ -16,7 +16,7 @@ changelog=
 tags=import layers,project
 
 homepage=http://hub.qgis.org/projects/ImportLayersFromProject
-tracker=http://hub.qgis.org/projects/ImportLayersFromProject
+tracker=https://github.com/haubourg/ImportLayersFromProject/issues
 repository=http://plugins.qgis.org/plugins/
 icon=icon.svg
 experimental=False
