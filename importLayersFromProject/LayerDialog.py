@@ -3,6 +3,8 @@
 from PyQt4 import QtGui,QtCore, QtXml
 from PyQt4.QtGui import QTableWidgetItem
 
+from PyQt4.QtCore import QUuid
+
 from qgis.core import *
 from qgis.gui import *
 from LayerChooser import Ui_Layers
@@ -58,7 +60,24 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
                 index = int(index)
                 
                 print 'importproject debug. layerdialog.py line 50 index of checked layers: ' +str(index)
-                QgsProject.instance().read(self.maps.item(index))
+       
+                # noeud xml
+                layerNode = self.maps.item(index)
+                
+                # recherche id
+                idNode = layerNode.namedItem("id")
+                if idNode != None:
+                    id = idNode.firstChild().toText().data()
+                    # give it a new id (for multiple import)
+
+                    try:
+                        import re
+                        newLayerId = "L%s" % re.sub("[{}-]", "", QUuid.createUuid().toString())
+                        idNode.firstChild().toText().setData(newLayerId)
+                    except:
+                        pass
+              
+                QgsProject.instance().read(layerNode)
        
         QtCore.QDir.setCurrent(here)
         super(LayerDialog,self).accept()
