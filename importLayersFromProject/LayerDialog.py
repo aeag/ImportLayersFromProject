@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 from PyQt4 import QtGui,QtCore, QtXml
 from PyQt4.QtGui import QTableWidgetItem
@@ -10,95 +10,124 @@ from qgis.gui import *
 from LayerChooser import Ui_Layers
 
 class LayerDialog(QtGui.QDialog, Ui_Layers):
+
     def __init__(self):
         QtGui.QDialog.__init__(self)
 
         # Set up the user interface from Designer.
         self.setupUi(self)
+        
+        self.domdoc = None
 
-    def populateTable(self,filePath):
+    def populateTable(self, filePath):
         self.filePath = filePath
         ui = self
         table = ui.tableWidget
-#        table.clear()
         table.setRowCount(0)
         xml = file(filePath).read()
-        d = QtXml.QDomDocument()
-        d.setContent(xml)
-        maps = d.elementsByTagName("maplayer")
-        self.maps=maps
+        self.domdoc = QtXml.QDomDocument()
+        self.domdoc.setContent(xml)
+        layers = self.domdoc.elementsByTagName("legendlayer")
+        self.layers = layers
 
-        for i in range(maps.length()):
+        for i in range(layers.length()):
             table.setRowCount(table.rowCount()+1)
-            info = getMapInfo(maps.item(i))
-            nameItem = QTableWidgetItem(info['name'])
-            nameItem.setFlags(QtCore.Qt.ItemIsUserCheckable|QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled)
-            nameItem.setCheckState(QtCore.Qt.Unchecked)
-            nameItem.setData(QtCore.Qt.UserRole,str(i))
-            table.setItem(i,0,nameItem)
-            table.setItem(i,1,FixedWidgetItem(info['mtype']))
-            table.setItem(i,2,FixedWidgetItem(info['geom']))
-            table.setItem(i,3,FixedWidgetItem(info['provider']))
-            ds = FixedWidgetItem(info['ds'])
-            ds.setData(QtCore.Qt.ToolTipRole,info['ds'])
-            table.setItem(i,4,ds)
+            info = self.getLayerInfo(layers.item(i))
+            if info:
+                nameItem = QTableWidgetItem(info['name'])
+                nameItem.setFlags(QtCore.Qt.ItemIsUserCheckable|QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled)
+                nameItem.setCheckState(QtCore.Qt.Unchecked)
+                nameItem.setData(QtCore.Qt.UserRole, info['id'])
+                nameItem.setData(QtCore.Qt.ToolTipRole, info['doc'])
+                table.setItem(i, 0, nameItem)
+                table.setItem(i, 1, FixedWidgetItem(info['mtype']))
+                table.setItem(i, 2, FixedWidgetItem(info['geom']))
+                table.setItem(i, 3, FixedWidgetItem(info['provider']))
+                ds = FixedWidgetItem(info['ds'])
+                ds.setData(QtCore.Qt.ToolTipRole, info['ds'])
+                table.setItem(i, 4 ,ds)
 
     def accept(self):
         """ do this for selected layers 
-        QgsProject.instance().read(maps.item(3))
+        QgsProject.instance().read(layers.item(3))
         """
         here = QtCore.QDir.currentPath()
-        QtCore.QDir.setCurrent(QtCore.QFileInfo(self.filePath).absoluteDir().canonicalPath())
-        print 'importproject debug. layerdialog.py line 50 tablewidget range: ' + str(range(self.tableWidget.rowCount()))
+        QtCore.QDir.setCurrent(str(QtCore.QFileInfo(self.filePath).absoluteDir().canonicalPath()))
        
-        for row in range(self.tableWidget.rowCount()):
-            print str(self.tableWidget.item(row,0).data(QtCore.Qt.UserRole))
-             
-            if self.tableWidget.item(row,0).checkState():
+        for row in range(self.tableWidget.rowCount()):             
+            if self.tableWidget.item(row, 0).checkState():
                 # index = self.tableWidget.item(row,0).data(QtCore.Qt.UserRole).toInt()[0]
-                index = self.tableWidget.item(row,0).data(QtCore.Qt.UserRole)[0]
-                index = int(index)
-                
-                print 'importproject debug. layerdialog.py line 50 index of checked layers: ' +str(index)
-                
+                layerId = self.tableWidget.item(row, 0).data(QtCore.Qt.UserRole)
+                       
                 # noeud xml
-                layerNode = self.maps.item(index)
+                layerNode = self.getLayerNode(layerId)
                 
-                # recherche id
-                idNode = layerNode.namedItem("id")
-                if idNode != None:
-                    id = idNode.firstChild().toText().data()
-                    # give it a new id (for multiple import)
-                    #import uuid
-                    newLayerId = QUuid.createUuid().toString()
-                    idNode.firstChild().toText().setData(newLayerId)
-                
-                QgsProject.instance().read(layerNode)
+                if layerNode:
+                    # recherche id
+                    idNode = layerNode.namedItem("id")
+                    if idNode != None:
+                        newLayerId = QUuid.createUuid().toString()
+                        idNode.firstChild().toText().setData(newLayerId)
+              
+                    QgsProject.instance().read(layerNode)
        
         QtCore.QDir.setCurrent(here)
-        super(LayerDialog,self).accept()
-        pass
+        super(LayerDialog, self).accept()
 
+    def getLayerNode(self, layerId):
+        maplayers = self.domdoc.elementsByTagName("maplayer")
+        for ml in (maplayers.item(i) for i in range(maplayers.size())):
+            idelt = ml.namedItem("id")
+            id = ""
+           
+            if idelt:
+                id = idelt.firstChild().toText().data()
+
+            # On ne gère pas les couches liées
+            if (id == layerId):
+                return ml
+                
+        return None
+    
+    def getLayerInfo(self, legendNode):
+        legendlayerfileElt = legendNode.firstChild().firstChildElement("legendlayerfile")
+        layerId = legendlayerfileElt.attribute("layerid")
+
+        layerNode = self.getLayerNode(layerId)
+        if layerNode != None:
+            title = layerNode.namedItem("title").firstChild().toText().data()
+            name = layerNode.namedItem("layername").firstChild().toText().data()
+            ds = layerNode.namedItem("datasource").firstChild().toText().data()
+            provider = layerNode.namedItem("provider").firstChild().toText().data()
+            mtype = layerNode.attributes().namedItem("type").firstChild().toText().data()
+            abstract = layerNode.namedItem("abstract").firstChild().toText().data()
+
+            doc = "-"
+            if (abstract != "") and (title == ""):
+                doc = "<p>%s</p>" % ("<br/>".join(abstract.split("\n")))
+            else:
+                if (abstract != "" or title != ""):
+                    doc = "<b>%s</b><br/>%s" % (title, "<br/>".join(abstract.split("\n")))
+                                                
+            if mtype == "vector":
+                geom = layerNode.attributes().namedItem("geometry").firstChild().toText().data()
+            elif mtype == "raster":
+                geom = layerNode.namedItem("rasterproperties").namedItem("mDrawingStyle").firstChild().toText().data()
+                if provider == "":
+                    provider = "gdal?"
+            else:
+                QgsMessageLog.logMessage("Unknown mtype: %s " % mtype, 'Extensions')
+                
+            return {'id':layerId, 'name':name, 'doc':doc, 'ds':ds, 'mtype':mtype, 'geom':geom, 'provider':provider}
+        
+        return None
+        
 class FixedWidgetItem(QTableWidgetItem):
     def __init__(self,label):
         super(FixedWidgetItem,self).__init__(label)
         self.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
 
-def getMapInfo(mapDom):
-    name = mapDom.namedItem("layername").firstChild().toText().data()
-    ds = mapDom.namedItem("datasource").firstChild().toText().data()
-    provider = mapDom.namedItem("provider").firstChild().toText().data()
-    mtype = mapDom.attributes().namedItem("type").firstChild().toText().data()
-    if mtype == "vector":
-        geom = mapDom.attributes().namedItem("geometry").firstChild().toText().data()
-    elif mtype == "raster":
-        geom = mapDom.namedItem("rasterproperties").namedItem("mDrawingStyle").firstChild().toText().data()
-        if provider == "":
-            provider = "gdal?"
-    else:
-        print "Unknown mtype: %s " % mtype
-    return {'name':name,'ds':ds,'mtype':mtype,'geom':geom,'provider':provider}
-
+    
 if __name__=="__main__":
     import sys
     app = QtGui.QApplication(sys.argv)
