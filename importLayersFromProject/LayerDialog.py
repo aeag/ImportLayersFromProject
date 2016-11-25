@@ -83,7 +83,10 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
             if idelt:
                 id = idelt.firstChild().toText().data()
 
-            # On ne gère pas les couches liées
+            attrEmbedded = ml.toElement().attribute("embedded", "0")
+            if (attrEmbedded == "1"):
+                id = ml.toElement().attribute("id", "")
+                
             if (id == layerId):
                 return ml
                 

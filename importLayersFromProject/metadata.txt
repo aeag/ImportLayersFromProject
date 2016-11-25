@@ -27,3 +27,4 @@ deprecated=False
 author=barry rowlingson
 email=geocatalogue@eau-adour-garonne.fr
 
+about=Import layers from another project, with all properties. Imports a disconnected copy of the layer(s), when Embed layers and groups keeps a live reference to it.
