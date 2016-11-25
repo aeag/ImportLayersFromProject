@@ -25,5 +25,5 @@ experimental=False
 deprecated=False
 
 author=barry rowlingson
-email=regis.haubourg@eau-adour-garonne.fr
+email=geocatalogue@eau-adour-garonne.fr
 
