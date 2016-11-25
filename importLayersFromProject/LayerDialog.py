@@ -3,6 +3,8 @@
 from PyQt4 import QtGui,QtCore, QtXml
 from PyQt4.QtGui import QTableWidgetItem
 
+from PyQt4.QtCore import QUuid
+
 from qgis.core import *
 from qgis.gui import *
 from LayerChooser import Ui_Layers
@@ -46,7 +48,7 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
         QgsProject.instance().read(maps.item(3))
         """
         here = QtCore.QDir.currentPath()
-        QtCore.QDir.setCurrent(str(QtCore.QFileInfo(self.filePath).absoluteDir().canonicalPath()))
+        QtCore.QDir.setCurrent(QtCore.QFileInfo(self.filePath).absoluteDir().canonicalPath())
         print 'importproject debug. layerdialog.py line 50 tablewidget range: ' + str(range(self.tableWidget.rowCount()))
        
         for row in range(self.tableWidget.rowCount()):
@@ -58,7 +60,20 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
                 index = int(index)
                 
                 print 'importproject debug. layerdialog.py line 50 index of checked layers: ' +str(index)
-                QgsProject.instance().read(self.maps.item(index))
+                
+                # noeud xml
+                layerNode = self.maps.item(index)
+                
+                # recherche id
+                idNode = layerNode.namedItem("id")
+                if idNode != None:
+                    id = idNode.firstChild().toText().data()
+                    # give it a new id (for multiple import)
+                    #import uuid
+                    newLayerId = QUuid.createUuid().toString()
+                    idNode.firstChild().toText().setData(newLayerId)
+                
+                QgsProject.instance().read(layerNode)
        
         QtCore.QDir.setCurrent(here)
         super(LayerDialog,self).accept()

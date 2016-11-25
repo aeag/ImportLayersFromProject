@@ -55,8 +55,10 @@ class MainPlugin(object):
     # choose a file
     # fire up the main dialog
     # import layers
+    s = QSettings()
+    lastProjectDir = s.value("UI/lastProjectDir", "")
     filePath = QFileDialog.getOpenFileName(self.iface.mainWindow(),"Choose project file" ,
-                                                 "",
+                                                 lastProjectDir,
                                                  "QGis projects (*.qgs)")
     if filePath == "":
       return

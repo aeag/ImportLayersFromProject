@@ -9,14 +9,15 @@
 name=ImportLayersFromProject
 qgisMinimumVersion=2.0
 description=Allows to copy layers from other projects. Similar to embbed layers and group core feature, but allowing modification, disconnected from source project.
-version=0.5
+version=0.6
 changelog=
+  0.6 solves bug preventing from importing twice the same layer. 
   0.5 ported to Qgis 2.0 API by Regis Haubourg
   0.4 last 1.x version by 'barry dot rowlingson at gmail.com'
 tags=import layers,project
 
 homepage=http://hub.qgis.org/projects/ImportLayersFromProject
-tracker=https://github.com/haubourg/ImportLayersFromProject/issues
+tracker=http://hub.qgis.org/projects/ImportLayersFromProject
 repository=http://plugins.qgis.org/plugins/
 icon=icon.svg
 experimental=False
