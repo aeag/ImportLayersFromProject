@@ -102,7 +102,7 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
             mtype = layerNode.attributes().namedItem("type").firstChild().toText().data()
             abstract = layerNode.namedItem("abstract").firstChild().toText().data()
 
-            doc = "-"
+            doc = name
             if (abstract != "") and (title == ""):
                 doc = "<p>%s</p>" % ("<br/>".join(abstract.split("\n")))
             else:
@@ -114,7 +114,7 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
             elif mtype == "raster":
                 geom = layerNode.namedItem("rasterproperties").namedItem("mDrawingStyle").firstChild().toText().data()
                 if provider == "":
-                    provider = "gdal?"
+                    provider = "gdal ?"
             else:
                 QgsMessageLog.logMessage("Unknown mtype: %s " % mtype, 'Extensions')
                 
