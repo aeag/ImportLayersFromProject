@@ -1,9 +1,6 @@
+from PyQt5.QtWidgets import (QDialog)
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-
-from qgis.core import *
-from about import Ui_Dialog
+from .about import Ui_Dialog
 
 class Dialog(QDialog, Ui_Dialog):
 	def __init__(self):

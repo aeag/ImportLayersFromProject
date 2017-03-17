@@ -16,15 +16,14 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Rasterlang.  If not, see <http://www.gnu.org/licenses/>.
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
-from qgis.core import *
-from qgis.gui import *
+from PyQt5.QtCore import (QSettings)
+from PyQt5.QtGui import (QIcon)
+from PyQt5.QtWidgets import (QAction, QFileDialog)
 
-from LayerDialog import LayerDialog
+from .LayerDialog import LayerDialog
 
-import resources
-import doAbout
+from . import resources
+from . import doAbout
 
 class MainPlugin(object):
   def __init__(self, iface):
@@ -35,11 +34,11 @@ class MainPlugin(object):
     # Create action
     self.action = QAction(QIcon(":/icons/importlayers.png"),"Import Layers from Project",self.iface.mainWindow())
     self.action.setWhatsThis("Import Layers from a .qgs project file")
-    QObject.connect(self.action,SIGNAL("triggered()"),self.run)
+    self.action.triggered.connect(self.run)
     self.iface.addToolBarIcon(self.action)
     self.iface.addPluginToMenu("&ImportProject",self.action)
     self.about = QAction("About ImportProject",self.iface.mainWindow())
-    QObject.connect(self.about,SIGNAL("triggered()"),self.clickAbout)
+    self.about.triggered.connect(self.clickAbout)
     self.iface.addPluginToMenu("&ImportProject",self.about)
 
 
@@ -62,11 +61,12 @@ class MainPlugin(object):
                                                  "QGis projects (*.qgs)")
     if filePath == "":
       return
+      
     self.iface.mapCanvas().freeze(1)
     window = LayerDialog()
     window.populateTable(filePath)
     window.show()
-    status = window.exec_()
+    window.exec_()
     self.iface.mapCanvas().freeze(0)
     self.iface.mapCanvas().refresh()
 

@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtGui,QtCore, QtXml
-from PyQt4.QtGui import QTableWidgetItem
+from PyQt5.QtCore import (QUuid, QFile, QIODevice, Qt, QDir, QFileInfo)
+from PyQt5.QtWidgets import (QTableWidgetItem, QDialog, QApplication, QFileDialog)
+from qgis.PyQt import QtXml
 
-from PyQt4.QtCore import QUuid
+from qgis.core import QgsProject, QgsMessageLog
 
-from qgis.core import *
-from qgis.gui import *
-from LayerChooser import Ui_Layers
+from .LayerChooser import Ui_Layers
 
-class LayerDialog(QtGui.QDialog, Ui_Layers):
+class LayerDialog(QDialog, Ui_Layers):
 
     def __init__(self):
-        QtGui.QDialog.__init__(self)
+        QDialog.__init__(self)
 
         # Set up the user interface from Designer.
         self.setupUi(self)
@@ -20,13 +19,16 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
         self.domdoc = None
 
     def populateTable(self, filePath):
-        self.filePath = filePath
+        self.filePath = filePath[0]
         ui = self
         table = ui.tableWidget
         table.setRowCount(0)
-        xml = file(filePath).read()
+        
         self.domdoc = QtXml.QDomDocument()
-        self.domdoc.setContent(xml)
+        xml = QFile(self.filePath)
+        if (xml.open(QIODevice.ReadOnly | QIODevice.Text)):
+            self.domdoc.setContent(xml)
+        
         layers = self.domdoc.elementsByTagName("legendlayer")
         self.layers = layers
 
@@ -35,29 +37,29 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
             info = self.getLayerInfo(layers.item(i))
             if info:
                 nameItem = QTableWidgetItem(info['name'])
-                nameItem.setFlags(QtCore.Qt.ItemIsUserCheckable|QtCore.Qt.ItemIsSelectable|QtCore.Qt.ItemIsEnabled)
-                nameItem.setCheckState(QtCore.Qt.Unchecked)
-                nameItem.setData(QtCore.Qt.UserRole, info['id'])
-                nameItem.setData(QtCore.Qt.ToolTipRole, info['doc'])
+                nameItem.setFlags(Qt.ItemIsUserCheckable|Qt.ItemIsSelectable|Qt.ItemIsEnabled)
+                nameItem.setCheckState(Qt.Unchecked)
+                nameItem.setData(Qt.UserRole, info['id'])
+                nameItem.setData(Qt.ToolTipRole, info['doc'])
                 table.setItem(i, 0, nameItem)
                 table.setItem(i, 1, FixedWidgetItem(info['mtype']))
                 table.setItem(i, 2, FixedWidgetItem(info['geom']))
                 table.setItem(i, 3, FixedWidgetItem(info['provider']))
                 ds = FixedWidgetItem(info['ds'])
-                ds.setData(QtCore.Qt.ToolTipRole, info['ds'])
+                ds.setData(Qt.ToolTipRole, info['ds'])
                 table.setItem(i, 4 ,ds)
 
     def accept(self):
         """ do this for selected layers 
-        QgsProject.instance().read(layers.item(3))
+        QgsProject.instance().readLayer(layers.item(3))
         """
-        here = QtCore.QDir.currentPath()
-        QtCore.QDir.setCurrent(str(QtCore.QFileInfo(self.filePath).absoluteDir().canonicalPath()))
+        here = QDir.currentPath()
+        QDir.setCurrent(str(QFileInfo(self.filePath).absoluteDir().canonicalPath()))
        
         for row in range(self.tableWidget.rowCount()):             
             if self.tableWidget.item(row, 0).checkState():
                 # index = self.tableWidget.item(row,0).data(QtCore.Qt.UserRole).toInt()[0]
-                layerId = self.tableWidget.item(row, 0).data(QtCore.Qt.UserRole)
+                layerId = self.tableWidget.item(row, 0).data(Qt.UserRole)
                        
                 # noeud xml
                 layerNode = self.getLayerNode(layerId)
@@ -69,9 +71,9 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
                         newLayerId = QUuid.createUuid().toString()
                         idNode.firstChild().toText().setData(newLayerId)
               
-                    QgsProject.instance().read(layerNode)
+                    QgsProject.instance().readLayer(layerNode)
        
-        QtCore.QDir.setCurrent(here)
+        QDir.setCurrent(here)
         super(LayerDialog, self).accept()
 
     def getLayerNode(self, layerId):
@@ -128,15 +130,15 @@ class LayerDialog(QtGui.QDialog, Ui_Layers):
 class FixedWidgetItem(QTableWidgetItem):
     def __init__(self,label):
         super(FixedWidgetItem,self).__init__(label)
-        self.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
+        self.setFlags(Qt.ItemIsEnabled|Qt.ItemIsSelectable)
 
     
 if __name__=="__main__":
     import sys
-    app = QtGui.QApplication(sys.argv)
-    filePath = QtGui.QFileDialog.getOpenFileName(None,"Choose project file" ,
+    app = QApplication(sys.argv)
+    filePath = QFileDialog.getOpenFileName(None,"Choose project file" ,
                                                  "",
-                                                 "QGis projects (*.qgs *.xpm *.jpg)")
+                                                 "QGis projects (*.qgs)")
     window = LayerDialog()
     window.populateTable(filePath)
     window.show()
