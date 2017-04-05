@@ -22,7 +22,7 @@ tags=import layers,project
 
 homepage=https://github.com/xcaeag/ImportLayersFromProject
 tracker=https://github.com/xcaeag/ImportLayersFromProject/issues
-repository=http://plugins.qgis.org/plugins/
+repository=https://github.com/xcaeag/ImportLayersFromProject
 icon=icon.svg
 experimental=False
 
