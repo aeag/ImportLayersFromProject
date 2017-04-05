@@ -22,6 +22,8 @@ from PyQt5.QtWidgets import (QAction, QFileDialog)
 
 from .LayerDialog import LayerDialog
 
+# Initialize Qt resources from file resources.py
+from . import resources
 from . import doAbout
 
 
